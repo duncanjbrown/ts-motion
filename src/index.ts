@@ -26,12 +26,9 @@ renderer.shadowMap.enabled = true;
 
 document.body.appendChild(renderer.domElement);
 
-// const light = new THREE.AmbientLight(0x404040);  // soft white light
-// scene.add(light);
-
 function buildGround(): THREE.Mesh {
   const planeGeometry = new THREE.PlaneGeometry(100, 100);  // Adjust the size as needed
-  const planeMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+  const planeMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
   const plane = new THREE.Mesh(planeGeometry, planeMaterial);
 
   plane.rotation.x = - Math.PI / 2;  // Rotate the plane to be horizontal
@@ -53,37 +50,88 @@ function buildCity(city: City) {
     return cylinder;
 }
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);  // white, intensity at 0.5
-directionalLight.position.set(2, 2, 1);  // position the light source in a way that it shines downwards
-directionalLight.castShadow = true;
-directionalLight.shadow.mapSize.width = 1024;  // default is 512
-directionalLight.shadow.mapSize.height = 1024; // default is 512
-scene.add(directionalLight);
+function buildRoad(city1: City, city2: City): THREE.Line {
+  const roadGeometry = new THREE.BufferGeometry().setFromPoints([city1.getPosition(), city2.getPosition()]);
+  const roadMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });  // Black color for road
+  const road = new THREE.Line(roadGeometry, roadMaterial);
 
-scene.add(buildGround());
-
-type City = {
-  x: number,
-  y: number,
-  z: number,
-  height: number
+  return road;
 }
 
-const citiesData: City[] = [
-    { x: -2, y: 0, z: 0, height: 1 },  // Example data
-    { x: 2, y: 0, z: 0, height: 3 }
-];
+function buildBlob(): THREE.Mesh {
+  const blobRadius = 0.1;
+  const blobSegments = 4;
+  const blobGeometry = new THREE.SphereGeometry(blobRadius, blobSegments, blobSegments);
+  const blobMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });  // Red color for blob
+  const blob = new THREE.Mesh(blobGeometry, blobMaterial);
+
+  blob.position.y = blobRadius;
+  return blob;
+}
+
+function addLighting(scene: THREE.Scene): THREE.Scene {
+  const ambientLight = new THREE.AmbientLight(0xffffff, 1)
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 3);  // white, intensity at 0.5
+  directionalLight.position.set(2, 2, 1);  // position the light source in a way that it shines downwards
+  directionalLight.castShadow = true;
+  directionalLight.shadow.mapSize.width = 1024;  // default is 512
+  directionalLight.shadow.mapSize.height = 1024; // default is 512
+
+  scene.add(ambientLight);
+  scene.add(directionalLight);
+
+  return scene;
+}
+
+addLighting(scene);
+scene.add(buildGround());
+
+class City {
+  x: number;
+  y: number;
+  z: number;
+  height: number;
+
+  constructor(x: number, y: number, z: number, height: number) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.height = height;
+  }
+
+  getPosition(): THREE.Vector3 {
+    return new THREE.Vector3(this.x, this.y, this.z);
+  }
+}
+
+const city1 = new City(-2, 0, 0, 1);
+const city2 = new City(2, 0, 0, 2);
+
+const citiesData: City[] = [city1, city2];
 
 citiesData.forEach(city => {
     scene.add(buildCity(city));
 });
 
+scene.add(buildRoad(city1, city2));
+
+const blob = buildBlob()
+scene.add(blob);
+
 const controls = new OrbitControls(camera, renderer.domElement);
+
+let t = 0;
+const speed = 0.01;
 
 function animate() {
     requestAnimationFrame(animate);
 
-    controls.update();  // Add this line
+    controls.update();
+
+    blob.position.lerpVectors(city1.getPosition(), city2.getPosition(), t);
+
+    t += speed;
+    if (t >= 1) t = 0;  // Reset the blob's position when it reaches cityB
 
     renderer.render(scene, camera);
 }
