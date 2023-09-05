@@ -99,19 +99,26 @@ class Simulation {
   setScene() {
     this.scene.add(this.ground);
     this.cities.forEach(city => {
-      this.scene.add(city.getMesh())
+      city.getComponents().forEach(component => {
+        this.scene.add(component)
+      });
     });
     this.roads.forEach(road => {
       this.scene.add(road.getLine())
     });
   }
 
-  update(delta: number) {
+  sendTravellers() {
     this.roads.forEach(road => {
-      if(road.travellers.length < 2) {
+      setInterval(() => {
         const traveller = road.sendTraveller();
         this.scene.add(traveller.getMesh());
-      }
+      }, road.getInterval());
+    });
+  }
+
+  update(delta: number) {
+    this.roads.forEach(road => {
       road.travellers.forEach(traveller => {
         traveller.step(delta);
         road.removeFinishedTravellers();

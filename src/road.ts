@@ -1,22 +1,23 @@
 import * as THREE from 'three';
-import City from './city';
 import Traveller from './traveller';
 
 class Road {
-  start: City;
-  end: City;
-  rate: number;
+  start: THREE.Vector3;
+  end: THREE.Vector3;
+  rate: number; // travellers per second
   travellers: Traveller[];
 
-  constructor(start: City, end: City, rate:number=500) {
+  constructor(start: THREE.Vector3, end: THREE.Vector3, rate:number=1) {
     this.start = start;
     this.end = end;
     this.rate = rate;
     this.travellers = [];
+
+    start.y = end.y = 0
   }
 
   getLine(): THREE.Line {
-    const roadGeometry = new THREE.BufferGeometry().setFromPoints([this.start.getPosition(), this.end.getPosition()]);
+    const roadGeometry = new THREE.BufferGeometry().setFromPoints([this.start, this.end]);
     const roadMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
     const road = new THREE.Line(roadGeometry, roadMaterial);
 
@@ -24,7 +25,7 @@ class Road {
   }
 
   sendTraveller(): Traveller {
-    const traveller = new Traveller(this.start.getPosition(), this.end.getPosition())
+    const traveller = new Traveller(this.start, this.end)
     this.travellers.push(traveller);
 
     return traveller;
@@ -32,6 +33,10 @@ class Road {
 
   removeFinishedTravellers() {
     this.travellers = this.travellers.filter(t => !t.finished);
+  }
+
+  getInterval(): number{
+    return 1000 / this.rate;
   }
 }
 

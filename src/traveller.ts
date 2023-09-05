@@ -37,7 +37,7 @@ class Traveller {
     const blobRadius = 0.1;
     const blobSegments = 4;
     const blobGeometry = new THREE.SphereGeometry(blobRadius, blobSegments, blobSegments);
-    const blobMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });  // Red color for blob
+    const blobMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
     const blob = new THREE.Mesh(blobGeometry, blobMaterial);
     blob.receiveShadow = true;
     blob.position.copy(this.start);
