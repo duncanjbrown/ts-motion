@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import Road from './road';
 
 class City {
   name: string;
@@ -6,6 +7,7 @@ class City {
   y: number;
   z: number;
   height: number;
+  roads: Road[];
 
   constructor(name: string, x: number, y: number, z: number, height: number) {
     this.name = name;
@@ -13,10 +15,17 @@ class City {
     this.y = y;
     this.z = z;
     this.height = height;
+    this.roads = [];
   }
 
   getPosition(): THREE.Vector3 {
     return new THREE.Vector3(this.x, this.y, this.z);
+  }
+
+  addRoad(to: City) {
+    const road = new Road(this, to);
+    this.roads.push(road);
+    return road;
   }
 
   getMesh(): THREE.Mesh {

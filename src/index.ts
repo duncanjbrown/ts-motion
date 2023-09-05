@@ -1,9 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { initialize, render } from './simulation'
+import { Simulation } from './simulation'
 import City from './city';
 import Road from './road';
-import Traveller from './traveller';
 
 function buildGround(): THREE.Mesh {
   const planeGeometry = new THREE.PlaneGeometry(100, 100);  // Adjust the size as needed
@@ -19,35 +18,32 @@ function buildGround(): THREE.Mesh {
 
 const city1 = new City('find', -2, 0, 0, 1);
 const city2 = new City('apply', 2, 0, 0, 2);
-const road = new Road(city1, city2);
-const traveller = new Traveller(road)
 
-const sim = initialize(
+const road = city1.addRoad(city2);
+
+const sim = new Simulation(
   buildGround(),
   [city1, city2],
-  [road],
-  [traveller]
+  [road]
 );
 
-render(sim);
-document.body.appendChild(sim.renderer.domElement);
+sim.setScene();
+
+const clock = new THREE.Clock()
 
 const controls = new OrbitControls(sim.camera, sim.renderer.domElement);
-
-let t = 0;
-const speed = 0.02;
 
 function animate() {
     requestAnimationFrame(animate);
 
     controls.update();
 
-    sim.travellers.forEach(traveller => {
-      traveller.step(t);
-    })
+    const delta = clock.getDelta();
 
-    t += speed;
-    if (t >= 1) t = 0;  // Reset the blob's position when it reaches cityB
+    sim.update(delta);
+
+    // t += speed;
+    // if (t >= 1) t = 0;  // Reset the blob's position when it reaches cityB
 
     sim.renderer.render(sim.scene, sim.camera);
 }

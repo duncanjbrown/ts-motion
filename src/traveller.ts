@@ -1,17 +1,32 @@
 import * as THREE from 'three';
-import Road from './road';
 
 class Traveller {
-  road: Road;
+  start: THREE.Vector3;
+  end: THREE.Vector3;
+  speed: number;
   mesh: THREE.Mesh;
+  finished: Boolean;
 
-  constructor(road: Road) {
-    this.road = road;
+  constructor(start: THREE.Vector3, end: THREE.Vector3) {
+    this.start = start;
+    this.end = end;
+    this.speed = Math.floor(Math.random() * 3) + 2;
     this.mesh = null;
+    this.finished = false;
   }
 
-  step(t: number) {
-    this.mesh.position.lerpVectors(this.road.start.getPosition(), this.road.end.getPosition(), t);
+  step(delta: number) {
+    const direction = new THREE.Vector3().subVectors(this.end, this.getMesh().position).normalize();
+
+    const moveAmount = delta * this.speed;
+    const remainingDistance = this.getMesh().position.distanceTo(this.end);
+
+    if (remainingDistance < moveAmount) {
+      this.getMesh().position.copy(this.end);
+      this.finished = true;
+    } else {
+      this.getMesh().position.addScaledVector(direction, moveAmount);
+    }
   }
 
   getMesh(): THREE.Mesh {
@@ -25,6 +40,7 @@ class Traveller {
     const blobMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });  // Red color for blob
     const blob = new THREE.Mesh(blobGeometry, blobMaterial);
     blob.receiveShadow = true;
+    blob.position.copy(this.start);
 
     blob.position.y = blobRadius;
     this.mesh = blob;
