@@ -121,7 +121,8 @@ class Simulation {
     this.roads.forEach(road => {
       road.travellers.forEach(traveller => {
         traveller.step(delta);
-        road.removeFinishedTravellers();
+        const removed = road.removeAndReturnFinishedTravellers();
+        removed.forEach(t => { this.scene.remove(t) });
       });
     });
   }

@@ -20,8 +20,8 @@ function getWorld() {
   // next
 }
 
-const city1 = new City('find', -2, 0, 0, 1, new Label('Find'));
-const city2 = new City('apply', 2, 0, 0, 2, new Label('Apply'));
+const city1 = new City('find', -2, 0, 0, 0.5, new Label('Find'));
+const city2 = new City('apply', 2, 0, 0, 0.5, new Label('Apply'));
 
 const road = city1.addRoad(city2);
 

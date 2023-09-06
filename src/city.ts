@@ -48,7 +48,7 @@ class City {
     const sideMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
     const materials = [sideMaterial, topMaterial, sideMaterial];
 
-    const geometry = new THREE.CylinderGeometry(0.5, 0.5, this.height, 32);
+    const geometry = new THREE.CylinderGeometry(0.6, 0.6, this.height, 32);
     const cylinder = new THREE.Mesh(geometry, materials);
 
     cylinder.position.set(this.x, this.y + this.height / 2, this.z);

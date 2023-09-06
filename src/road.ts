@@ -7,7 +7,7 @@ class Road {
   rate: number; // travellers per second
   travellers: Traveller[];
 
-  constructor(start: THREE.Vector3, end: THREE.Vector3, rate:number=1) {
+  constructor(start: THREE.Vector3, end: THREE.Vector3, rate:number=3) {
     this.start = start;
     this.end = end;
     this.rate = rate;
@@ -31,8 +31,11 @@ class Road {
     return traveller;
   }
 
-  removeFinishedTravellers() {
+  removeAndReturnFinishedTravellers() {
+    const toRemove = this.travellers.filter(t => t.finished);
     this.travellers = this.travellers.filter(t => !t.finished);
+
+    return toRemove.map(t => t.getMesh());
   }
 
   getInterval(): number{
