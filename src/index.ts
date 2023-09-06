@@ -38,6 +38,15 @@ sim.sendTravellers();
 
 const controls = new OrbitControls(sim.camera, sim.renderer.domElement);
 
+const socket = new WebSocket('ws://localhost:8181');
+socket.onopen = () => {
+  socket.send("hello");
+};
+
+socket.onmessage = (event: MessageEvent) => {
+  console.log('Server says:', event.data);
+};
+
 function animate() {
     requestAnimationFrame(animate);
 

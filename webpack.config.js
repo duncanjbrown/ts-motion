@@ -1,6 +1,7 @@
 const path = require('path');
 
 module.exports = {
+  mode: 'development',
   entry: './src/index.ts',
   module: {
     rules: [
@@ -17,10 +18,9 @@ module.exports = {
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
+    publicPath: '/'
   },
   devServer: {
     static: path.join(__dirname, 'dist'), // use 'static' instead of 'contentBase'
-    compress: true,
-    port: 9000,
   },
 };
