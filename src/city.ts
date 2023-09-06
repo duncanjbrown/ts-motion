@@ -37,10 +37,19 @@ class City {
     if(this.mesh) {
       return this.mesh;
     }
+    const loader = new THREE.TextureLoader();
+    const texture = loader.load('govuk-crown.png');
+    texture.center.set(0.5, 0.5);  // Set rotation center to the middle of the texture
+    texture.rotation = Math.PI / 2;
+    texture.anisotropy = 128;
+
+
+    const topMaterial = new THREE.MeshBasicMaterial({ map: texture });
+    const sideMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+    const materials = [sideMaterial, topMaterial, sideMaterial];
 
     const geometry = new THREE.CylinderGeometry(0.5, 0.5, this.height, 32);
-    const material = new THREE.MeshLambertMaterial({ color: 0xff0000 });
-    const cylinder = new THREE.Mesh(geometry, material);
+    const cylinder = new THREE.Mesh(geometry, materials);
 
     cylinder.position.set(this.x, this.y + this.height / 2, this.z);
     cylinder.castShadow = true;

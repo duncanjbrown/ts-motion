@@ -40,8 +40,8 @@ class Simulation {
     directionalLight.castShadow = true;
 
     // Sharper shadows
-    directionalLight.shadow.mapSize.width = 1024;
-    directionalLight.shadow.mapSize.height = 1024;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
 
     this.scene.add(ambientLight);
     this.scene.add(directionalLight);
