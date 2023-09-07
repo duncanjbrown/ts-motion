@@ -4,15 +4,21 @@ class Traveller {
   start: THREE.Vector3;
   end: THREE.Vector3;
   speed: number;
+  colour: string;
+  transparent: boolean;
+  size: number;
   mesh: THREE.Mesh;
-  finished: Boolean;
+  finished: boolean;
 
-  constructor(start: THREE.Vector3, end: THREE.Vector3) {
+  constructor(start: THREE.Vector3, end: THREE.Vector3, colour: string, size:number=0.1, transparent:boolean=false) {
     this.start = start;
     this.end = end;
     this.speed = Math.floor(Math.random() * 3) + 2;
     this.mesh = null;
+    this.colour = colour
     this.finished = false;
+    this.size = size;
+    this.transparent = transparent;
   }
 
   step(delta: number) {
@@ -34,13 +40,20 @@ class Traveller {
       return this.mesh;
     }
 
-    const blobRadius = 0.1;
+    const blobRadius = this.size;
     const blobSegments = 32;
     const blobGeometry = new THREE.SphereGeometry(blobRadius, blobSegments, blobSegments);
-    const blobMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
+    const blobMaterial = new THREE.MeshLambertMaterial({ color: this.colour, transparent: this.transparent });
+    if(this.transparent) {
+      blobMaterial.opacity = 0.1;
+    }
     const blob = new THREE.Mesh(blobGeometry, blobMaterial);
     blob.receiveShadow = true;
     blob.position.copy(this.start);
+
+    if(this.transparent) {
+      blob.position.y = 0.2;
+    }
 
     this.mesh = blob;
 

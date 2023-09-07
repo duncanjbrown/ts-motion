@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import City from './city';
 import Road from './road';
-import Traveller from './traveller';
+import InboundStream from './inboundStream';
 
 class Simulation {
   scene: THREE.Scene;
@@ -10,6 +10,8 @@ class Simulation {
   ground: THREE.Mesh;
   cities: City[];
   roads: Road[];
+  inboundStreams: InboundStream[];
+  intervals: number[];
 
   getCamera(width: number, height: number) {
     const camera = new THREE.OrthographicCamera(
@@ -51,8 +53,10 @@ class Simulation {
     ground: THREE.Mesh,
     cities: City[],
     roads: Road[],
+    inboundStreams: InboundStream[],
   ) {
     this.scene = new THREE.Scene();
+    this.intervals = [];
 
     const zoomLevel = 10;
     const aspectRatio = window.innerWidth / window.innerHeight;
@@ -74,6 +78,7 @@ class Simulation {
     this.ground = ground;
     this.cities = cities;
     this.roads = roads;
+    this.inboundStreams = inboundStreams;
 
     // Resize :/
     const self = this;
@@ -110,10 +115,17 @@ class Simulation {
 
   sendTravellers() {
     this.roads.forEach(road => {
-      setInterval(() => {
+      this.intervals.push(window.setInterval(() => {
         const traveller = road.sendTraveller();
         this.scene.add(traveller.getMesh());
-      }, road.getInterval());
+      }, road.getInterval()));
+    });
+
+    this.inboundStreams.forEach(stream => {
+      this.intervals.push(window.setInterval(() => {
+        const traveller = stream.sendTraveller();
+        this.scene.add(traveller.getMesh());
+      }, stream.getInterval()));
     });
   }
 
@@ -124,6 +136,20 @@ class Simulation {
         const removed = road.removeAndReturnFinishedTravellers();
         removed.forEach(t => { this.scene.remove(t) });
       });
+    });
+
+    this.inboundStreams.forEach(stream => {
+      stream.travellers.forEach(traveller => {
+        traveller.step(delta);
+        const removed = stream.removeAndReturnFinishedTravellers();
+        removed.forEach(t => { this.scene.remove(t) });
+      });
+    });
+  }
+
+  clearIntervals() {
+    this.intervals.forEach(i => {
+      window.clearInterval(i);
     });
   }
 }

@@ -8,17 +8,19 @@ class City {
   y: number;
   z: number;
   height: number;
+  colour: string;
   label: Label;
   roads: Road[];
   mesh: THREE.Mesh;
 
-  constructor(name: string, x: number, y: number, z: number, height: number, label: Label) {
+  constructor(name: string, x: number, y: number, z: number, height: number, label: Label, colour: string) {
     this.name = name;
     this.x = x;
     this.y = y;
     this.z = z;
     this.height = height;
     this.label = label;
+    this.colour = colour;
     this.roads = [];
     this.mesh = null;
   }
@@ -28,7 +30,7 @@ class City {
   }
 
   addRoad(to: City, rate:number=3) {
-    const road = new Road(this.getPosition(), to.getPosition(), rate);
+    const road = new Road(this.getPosition(), to.getPosition(), rate, this.colour);
     this.roads.push(road);
     return road;
   }

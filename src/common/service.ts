@@ -20,6 +20,7 @@ type Service = {
     destination: string,
     rate: number,
   }?],
+  colour: string,
   /**
     * External traffic reaching this service
     */

@@ -1,33 +1,34 @@
 import * as THREE from 'three';
 import Traveller from './traveller';
 
-class Road {
+class InboundStream {
   start: THREE.Vector3;
   end: THREE.Vector3;
   rate: number; // travellers per second
   travellerColour: string;
   travellers: Traveller[];
 
-  constructor(start: THREE.Vector3, end: THREE.Vector3, rate:number=3, travellerColour: string) {
-    this.start = start;
+  constructor(end: THREE.Vector3, rate:number=3, travellerColour: string) {
+    end.y = 0;
+    this.start = new THREE.Vector3(0,0,12.5);
     this.end = end;
+
     this.rate = rate;
     this.travellerColour = travellerColour;
     this.travellers = [];
-
-    start.y = end.y = 0
-  }
-
-  getLine(): THREE.Line {
-    const roadGeometry = new THREE.BufferGeometry().setFromPoints([this.start, this.end]);
-    const roadMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
-    const road = new THREE.Line(roadGeometry, roadMaterial);
-
-    return road;
   }
 
   sendTraveller(): Traveller {
-    const traveller = new Traveller(this.start, this.end, this.travellerColour)
+    const start = this.start.clone();
+    const end = this.end.clone();
+    const offset = Math.random() * 0.4;
+
+    start.x += offset;
+    end.x += offset;
+    start.z += offset;
+    end.z += offset;
+
+    const traveller = new Traveller(start, end, this.travellerColour, 0.07, true)
     this.travellers.push(traveller);
 
     return traveller;
@@ -45,4 +46,4 @@ class Road {
   }
 }
 
-export default Road;
+export default InboundStream;
