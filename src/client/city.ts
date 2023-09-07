@@ -27,8 +27,8 @@ class City {
     return this.getMesh().position;
   }
 
-  addRoad(to: City) {
-    const road = new Road(this.getPosition(), to.getPosition());
+  addRoad(to: City, rate:number=3) {
+    const road = new Road(this.getPosition(), to.getPosition(), rate);
     this.roads.push(road);
     return road;
   }
