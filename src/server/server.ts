@@ -31,10 +31,10 @@ function getWorld(): World {
     colour: 'red',
     outbound: [{
       destination: 'apply',
-      rate: Math.floor(Math.random() * 5)
+      rate: Math.floor(Math.random() * 2) + 1
     }],
     inbound: {
-      rate: Math.floor(Math.random() * 10)
+      rate: Math.floor(Math.random() * 2) + 1
     }
   };
 
@@ -47,10 +47,10 @@ function getWorld(): World {
     colour: 'red',
     outbound: [{
       destination: 'find',
-      rate: Math.floor(Math.random() * 5)
+      rate: Math.floor(Math.random() * 2) + 1
     }],
     inbound: {
-      rate: Math.floor(Math.random() * 100)
+      rate: Math.floor(Math.random() * 2)
     }
   };
 
@@ -72,6 +72,4 @@ wss.on('connection', function connection(sock) {
 });
 
 // Serve the files on port 3000.
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!\n');
-});
+app.listen(3000, function () {});

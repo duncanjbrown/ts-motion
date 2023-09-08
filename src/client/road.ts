@@ -1,26 +1,28 @@
 import * as THREE from 'three';
 import Traveller from './traveller';
+import { City } from './city';
 
 class Road {
-  start: THREE.Vector3;
-  end: THREE.Vector3;
+  start: City;
+  end: City;
   rate: number; // travellers per second
   travellerColour: string;
   travellers: Traveller[];
 
-  constructor(start: THREE.Vector3, end: THREE.Vector3, rate:number=3, travellerColour: string) {
+  constructor(start: City, end: City, rate:number=3, travellerColour: string) {
     this.start = start;
     this.end = end;
     this.rate = rate;
     this.travellerColour = travellerColour;
     this.travellers = [];
-
-    start.y = end.y = 0
   }
 
   getLine(): THREE.Line {
-    const roadGeometry = new THREE.BufferGeometry().setFromPoints([this.start, this.end]);
-    const roadMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+    const startPos = this.start.getPosition().clone();
+    const endPos = this.end.getPosition().clone();
+
+    const roadGeometry = new THREE.BufferGeometry().setFromPoints([startPos, endPos]);
+    const roadMaterial = new THREE.LineBasicMaterial({ color: '#888' });
     const road = new THREE.Line(roadGeometry, roadMaterial);
 
     return road;

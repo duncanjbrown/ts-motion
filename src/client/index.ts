@@ -1,13 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Simulation } from './simulation'
-import City from './city';
+import { City, Theme } from './city';
 import Road from './road';
-import InboundStream from './inboundStream';
 import Label from './label';
 import World from './../common/world';
 import Service from './../common/service';
-import { diff } from 'deep-object-diff';
 
 function buildGround(): THREE.Mesh {
   const planeGeometry = new THREE.PlaneGeometry(100, 100);
@@ -69,23 +67,26 @@ function simulateWorld(world: World): Simulation {
 
   const cities = world.services.map((s, i) => {
     const { x, y, z } = positions[i];
-    return new City(s.name, x, y, z, 0.5, new Label(s.displayName), s.colour);
+    return new City(s.name, x, y, z, 0.5, new Label(s.displayName), '#000', s.colour);
   });
+
+  const origin = new City('external', 0, 0, 6, 0.5, new Label("The Internet"), "#e1e1e1", '#fff');
 
   const roads: Road[] = world.services.flatMap((s:Service) => {
-    return s.outbound.map(outbound => {
-      let fromCity = cities.find(c => c.name == s.name);
+    const thisCity = cities.find(c => c.name == s.name);
+    const roads = s.outbound.map(outbound => {
       let toCity = cities.find(c => c.name == outbound.destination);
-      return fromCity.addRoad(toCity, outbound.rate);
+      return thisCity.addRoad(toCity, outbound.rate);
     });
+
+    roads.push(origin.addRoad(thisCity, s.inbound.rate));
+
+    return roads;
   });
 
-  const inboundStreams: InboundStream[] = world.services.map((s:Service) => {
-    let destCity = cities.find(c => c.name == s.name);
-    return new InboundStream(destCity.getPosition(), s.inbound.rate, '#666');
-  });
+  cities.push(origin);
 
-  return new Simulation(buildGround(), cities, roads, inboundStreams);
+  return new Simulation(buildGround(), cities, roads);
 }
 
 function updateSimulation(simulation:Simulation, worldUpdate: World) {
@@ -100,26 +101,12 @@ function updateSimulation(simulation:Simulation, worldUpdate: World) {
     serviceUpdate.outbound.forEach(outbound => {
       let fromCity = simulation.cities.find(c => c.name == serviceUpdate.name);
       let toCity = simulation.cities.find(c => c.name == outbound.destination);
-
-      const startPos = fromCity.getPosition().clone();
-      const endPos = toCity.getPosition().clone();
-      startPos.y = endPos.y = 0;
-
-      let road = simulation.roads.find(r => r.start.equals(startPos) && r.end.equals(endPos));
+      let road = simulation.roads.find(r => r.start == fromCity && r.end == toCity);
       if (road) {
         console.log("new rate " + outbound.rate);
         road.rate = outbound.rate;
       }
     });
-
-    let destCity = simulation.cities.find(c => c.name == serviceUpdate.name);
-    const endPos = destCity.getPosition().clone();
-    endPos.y = 0;
-    let inboundStream = simulation.inboundStreams.find(s => s.end.equals(endPos));
-    if (inboundStream) {
-        console.log("new stream " + serviceUpdate.inbound.rate);
-        inboundStream.rate = serviceUpdate.inbound.rate;
-    }
   });
 
   simulation.clearIntervals();

@@ -2,6 +2,12 @@ import * as THREE from 'three';
 import Road from './road';
 import Label from './label';
 
+type Theme = {
+  colour: string,
+  texture: string,
+  travellerColour: string,
+};
+
 class City {
   name: string;
   x: number;
@@ -9,11 +15,13 @@ class City {
   z: number;
   height: number;
   colour: string;
+  travellerColour: string;
+  theme: Theme;
   label: Label;
   roads: Road[];
   mesh: THREE.Mesh;
 
-  constructor(name: string, x: number, y: number, z: number, height: number, label: Label, colour: string) {
+  constructor(name: string, x: number, y: number, z: number, height: number, label: Label, colour:string='#000', travellerColour:string) {
     this.name = name;
     this.x = x;
     this.y = y;
@@ -21,6 +29,7 @@ class City {
     this.height = height;
     this.label = label;
     this.colour = colour;
+    this.travellerColour = travellerColour;
     this.roads = [];
     this.mesh = null;
   }
@@ -30,7 +39,7 @@ class City {
   }
 
   addRoad(to: City, rate:number=3) {
-    const road = new Road(this.getPosition(), to.getPosition(), rate, this.colour);
+    const road = new Road(this, to, rate, this.travellerColour);
     this.roads.push(road);
     return road;
   }
@@ -39,19 +48,24 @@ class City {
     if(this.mesh) {
       return this.mesh;
     }
-    const loader = new THREE.TextureLoader();
-    const texture = loader.load('govuk-crown.png');
-    texture.center.set(0.5, 0.5);  // Set rotation center to the middle of the texture
-    texture.rotation = Math.PI / 2;
-    texture.anisotropy = 128;
 
-
-    const topMaterial = new THREE.MeshBasicMaterial({ map: texture });
-    const sideMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
-    const materials = [sideMaterial, topMaterial, sideMaterial];
-
+    let cylinder:THREE.Mesh;
     const geometry = new THREE.CylinderGeometry(0.6, 0.6, this.height, 32);
-    const cylinder = new THREE.Mesh(geometry, materials);
+
+    if(this.colour == '#000') {
+      const loader = new THREE.TextureLoader();
+      const texture = loader.load('govuk-crown.png');
+      texture.center.set(0.5, 0.5);  // Set rotation center to the middle of the texture
+      texture.rotation = Math.PI / 2;
+      texture.anisotropy = 128;
+      const topMaterial = new THREE.MeshBasicMaterial({ map: texture });
+      const sideMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+      const materials = [sideMaterial, topMaterial, sideMaterial];
+      cylinder = new THREE.Mesh(geometry, materials);
+    } else {
+      const material = new THREE.MeshLambertMaterial({ color: this.colour });
+      cylinder = new THREE.Mesh(geometry, material);
+    }
 
     cylinder.position.set(this.x, this.y + this.height / 2, this.z);
     cylinder.castShadow = true;
@@ -76,4 +90,4 @@ class City {
   }
 }
 
-export default City;
+export { City, Theme };

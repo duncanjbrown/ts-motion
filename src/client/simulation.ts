@@ -1,7 +1,6 @@
 import * as THREE from 'three';
-import City from './city';
+import { City } from './city';
 import Road from './road';
-import InboundStream from './inboundStream';
 
 class Simulation {
   scene: THREE.Scene;
@@ -10,7 +9,6 @@ class Simulation {
   ground: THREE.Mesh;
   cities: City[];
   roads: Road[];
-  inboundStreams: InboundStream[];
   intervals: number[];
 
   getCamera(width: number, height: number) {
@@ -53,7 +51,6 @@ class Simulation {
     ground: THREE.Mesh,
     cities: City[],
     roads: Road[],
-    inboundStreams: InboundStream[],
   ) {
     this.scene = new THREE.Scene();
     this.intervals = [];
@@ -78,7 +75,6 @@ class Simulation {
     this.ground = ground;
     this.cities = cities;
     this.roads = roads;
-    this.inboundStreams = inboundStreams;
 
     // Resize :/
     const self = this;
@@ -120,13 +116,6 @@ class Simulation {
         this.scene.add(traveller.getMesh());
       }, road.getInterval()));
     });
-
-    this.inboundStreams.forEach(stream => {
-      this.intervals.push(window.setInterval(() => {
-        const traveller = stream.sendTraveller();
-        this.scene.add(traveller.getMesh());
-      }, stream.getInterval()));
-    });
   }
 
   update(delta: number) {
@@ -134,14 +123,6 @@ class Simulation {
       road.travellers.forEach(traveller => {
         traveller.step(delta);
         const removed = road.removeAndReturnFinishedTravellers();
-        removed.forEach(t => { this.scene.remove(t) });
-      });
-    });
-
-    this.inboundStreams.forEach(stream => {
-      stream.travellers.forEach(traveller => {
-        traveller.step(delta);
-        const removed = stream.removeAndReturnFinishedTravellers();
         removed.forEach(t => { this.scene.remove(t) });
       });
     });
