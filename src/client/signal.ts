@@ -1,30 +1,30 @@
 import * as THREE from 'three';
-import { City } from './city';
 
-class Traveller {
+class Signal {
   start: THREE.Vector3;
   end: THREE.Vector3;
   speed: number;
-  colour: string;
-  size: number;
   mesh: THREE.Mesh;
   finished: boolean;
   startPos: THREE.Vector3;
   endPos: THREE.Vector3;
+  texture: THREE.CanvasTexture;
 
-  constructor(start: THREE.Vector3, end: THREE.Vector3, colour: string, size:number=0.03) {
+  constructor(start: THREE.Vector3, end: THREE.Vector3, texture: THREE.CanvasTexture) {
     this.start = start;
     this.end = end;
-    this.speed = Math.floor(Math.random() * 3) + 2;
+    this.speed = Math.floor(Math.random() * 3) + 1.5;
     this.mesh = null;
-    this.colour = colour
+    this.texture = texture;
     this.finished = false;
-    this.size = size;
 
     this.startPos = this.start.clone();
     this.endPos = this.end.clone();
 
-    this.startPos.y = this.endPos.y = 0.1;
+    // jitter
+    const jitter = ((Math.random() - 0.5) * 2) * 0.9;
+    this.endPos.x = this.endPos.x + jitter;
+    this.endPos.z = this.endPos.z + jitter;
   }
 
   step(delta: number) {
@@ -32,6 +32,10 @@ class Traveller {
 
     const moveAmount = delta * this.speed;
     const remainingDistance = this.getMesh().position.distanceTo(this.endPos);
+
+    if(remainingDistance < 1) {
+      (<THREE.MeshBasicMaterial>this.getMesh().material).opacity = 1 - (1 - remainingDistance);
+    }
 
     if (remainingDistance < moveAmount) {
       this.getMesh().position.copy(this.endPos);
@@ -46,18 +50,14 @@ class Traveller {
       return this.mesh;
     }
 
-    const blobRadius = this.size;
-    const blobSegments = 32;
-    const blobGeometry = new THREE.SphereGeometry(blobRadius, blobSegments, blobSegments);
-    const blobMaterial = new THREE.MeshLambertMaterial({ color: this.colour });
-    const blob = new THREE.Mesh(blobGeometry, blobMaterial);
-    blob.receiveShadow = true;
-    blob.position.copy(this.startPos);
+    const geometry = new THREE.PlaneGeometry(0.5, 0.5);
+    const material = new THREE.MeshBasicMaterial({ map: this.texture, transparent: true });
 
-    this.mesh = blob;
+    this.mesh = new THREE.Mesh(geometry, material);
+    this.mesh.position.copy(this.startPos);
 
-    return blob;
+    return this.mesh;
   }
 }
 
-export default Traveller;
+export default Signal;

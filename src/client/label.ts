@@ -23,6 +23,7 @@ class Label {
     // Text
     context.font = fontsize + "px Arial";
     context.fillStyle = textColor;
+    context.textAlign = 'left';
     context.fillText(message, 10, fontsize);
 
     // Plane

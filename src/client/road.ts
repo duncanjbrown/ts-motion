@@ -18,6 +18,7 @@ class Road {
   getLine(): THREE.Line {
     const startPos = this.start.getPosition().clone();
     const endPos = this.end.getPosition().clone();
+    startPos.y = endPos.y = 0.1;
 
     const roadGeometry = new THREE.BufferGeometry().setFromPoints([startPos, endPos]);
     const roadMaterial = new THREE.LineBasicMaterial({ color: '#888' });
@@ -27,7 +28,7 @@ class Road {
   }
 
   sendTraveller(colour:string='black'): Traveller {
-    const traveller = new Traveller(this.start, this.end, colour)
+    const traveller = new Traveller(this.start.getPosition(), this.end.getPosition(), colour)
     this.travellers.push(traveller);
 
     return traveller;

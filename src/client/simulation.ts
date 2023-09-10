@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { City } from './city';
 import Road from './road';
+import { EventType, WorldEvent } from './worldEvent';
+import Signal from './signal';
 
 class Simulation {
   scene: THREE.Scene;
@@ -9,6 +11,7 @@ class Simulation {
   ground: THREE.Mesh;
   cities: Map<string, City>;
   roads: Road[];
+  events: WorldEvent[];
   intervals: number[];
 
   getCamera(width: number, height: number) {
@@ -51,6 +54,7 @@ class Simulation {
     ground: THREE.Mesh,
     cities: Map<string, City>,
     roads: Road[],
+    events: WorldEvent[],
   ) {
     this.scene = new THREE.Scene();
     this.intervals = [];
@@ -75,6 +79,7 @@ class Simulation {
     this.ground = ground;
     this.cities = cities;
     this.roads = roads;
+    this.events = events;
 
     // Resize :/
     const self = this;
@@ -118,12 +123,30 @@ class Simulation {
     });
   }
 
+  sendEvents() {
+    this.events.forEach(event => {
+      this.intervals.push(window.setInterval(() => {
+        const signal = event.sendSignal();
+        this.scene.add(signal.getMesh());
+      }, event.getInterval()));
+    });
+  }
+
+
   update(delta: number) {
     this.roads.forEach(road => {
       road.travellers.forEach(traveller => {
         traveller.step(delta);
         const removed = road.removeAndReturnFinishedTravellers();
         removed.forEach(t => { this.scene.remove(t) });
+      });
+    });
+
+    this.events.forEach(event => {
+      event.signals.forEach((signal:Signal) => {
+        signal.step(delta);
+        const removed = event.removeAndReturnFinishedSignals();
+        removed.forEach((t:THREE.Object3D) => { this.scene.remove(t) });
       });
     });
   }

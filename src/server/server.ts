@@ -33,6 +33,7 @@ function getWorld(): World {
         'rate': Math.floor(Math.random() * 2) + 1
       }
     },
+    events: {},
     inbound: {
       'internet': {
         'rate': Math.floor(Math.random() * 2) + 1
@@ -49,6 +50,11 @@ function getWorld(): World {
     outbound: {
       'find': {
         'rate': Math.floor(Math.random() * 2) + 1
+      }
+    },
+    events: {
+      'submission': {
+        rate: 6
       }
     },
     inbound: {

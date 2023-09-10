@@ -6,6 +6,7 @@ import Road from './road';
 import Label from './label';
 import World from './../common/world';
 import Service from './../common/service';
+import { EventType, WorldEvent } from './worldEvent';
 
 function buildGround(): THREE.Mesh {
   const planeGeometry = new THREE.PlaneGeometry(100, 100);
@@ -55,6 +56,7 @@ function getWorld(): World {
         rate: 3
       }
     },
+    events: {},
     inbound: {
       'internet': {
         rate: 5
@@ -68,14 +70,19 @@ function getWorld(): World {
     displayName: 'Apply',
     host: 'www.apply-for-teacher-training.service.gov.uk',
     theme: 'govuk',
+    events: {
+      'submission': {
+        rate: 3
+      },
+      'recruitment': {
+        rate: 1
+      }
+    },
     outbound: {
       'find': {
         rate: 3
       },
       'git': {
-        rate: 3
-      },
-      'register': {
         rate: 3
       }
     },
@@ -102,7 +109,8 @@ function getWorld(): World {
       'internet': {
         rate: 5
       }
-    }
+    },
+    events: {}
   };
 
   const register: Service = {
@@ -111,6 +119,14 @@ function getWorld(): World {
     displayName: 'Register',
     host: 'www.register-trainee-teachers.service.gov.uk',
     theme: 'govuk',
+    events: {
+      'qts': {
+        rate: 3
+      },
+      'withdrawal': {
+        rate: 3
+      }
+    },
     outbound: {
     },
     inbound: {
@@ -127,20 +143,20 @@ function getWorld(): World {
 function simulateWorld(world: World): Simulation {
   const positions:any = {
     'find': {
-      'city' : { x: -2, y: 0, z: 0 },
-      'internet': { x: -2, y: 0, z: 3 }
+      'city' : { x: -5, y: 0, z: 0 },
+      'internet': { x: -5, y: 0, z: 3 }
     },
     'apply': {
-      'city' : { x: 2, y: 0, z: 0 },
-      'internet': { x: 2, y: 0, z: 3 }
+      'city' : { x: 1, y: 0, z: 0 },
+      'internet': { x: 1, y: 0, z: 3 }
     },
     'register': {
-      'city' : { x: 6, y: 0, z: 0 },
-      'internet': { x: 6, y: 0, z: 3 }
+      'city' : { x: 5, y: 0, z: 0 },
+      'internet': { x: 5, y: 0, z: 4 }
     },
     'git': {
-      'city' : { x: 0, y: 0, z: -3 },
-      'internet': { x: 0, y: 0, z: -6 }
+      'city' : { x: -2, y: 0, z: -4 },
+      'internet': { x: -2, y: 0, z: -7 }
     }
   }
 
@@ -173,7 +189,22 @@ function simulateWorld(world: World): Simulation {
     return [...outboundRoads, ...inboundRoads];
   });
 
-  return new Simulation(buildGround(), new Map<string, City>(Object.entries(cities)), roads);
+  const events: WorldEvent[] = world.services.flatMap((s:Service) => {
+    const thisCity:City = cities[s.name];
+
+    const events:WorldEvent[] = [];
+
+    if(s.events) {
+      events.push(...Object.entries(s.events).map(([type, details]) => {
+        let eventType:EventType = type as EventType;
+        return thisCity.addEvent(eventType, details.rate);
+      }));
+    }
+
+    return events;
+  });
+
+  return new Simulation(buildGround(), new Map<string, City>(Object.entries(cities)), roads, events);
 }
 
 function updateSimulation(simulation:Simulation, worldUpdate: World) {
@@ -181,10 +212,6 @@ function updateSimulation(simulation:Simulation, worldUpdate: World) {
     console.log('new service');
     let fromCity = simulation.cities.get(serviceUpdate.name);
 
-    // const roads = Object.entries(s.outbound).map(([destination, details]) => {
-    //   let toCity = cities[destination];
-    //   return thisCity.addRoad(toCity, details.rate);
-    // });
     Object.entries(serviceUpdate.outbound).forEach(([destination, details]) => {
       let toCity = simulation.cities.get(destination);
       let road = simulation.roads.find(r => r.start == fromCity && r.end == toCity);
@@ -193,10 +220,19 @@ function updateSimulation(simulation:Simulation, worldUpdate: World) {
         road.rate = details.rate;
       }
     });
+
+    Object.entries(serviceUpdate.events).forEach(([eventType, details]) => {
+      let event = simulation.events.find(e => e.start == fromCity && e.type == eventType);
+      if (event) {
+        console.log("new event rate " + details.rate);
+        event.rate = details.rate;
+      }
+    });
   });
 
   simulation.clearIntervals();
   simulation.sendTravellers();
+  simulation.sendEvents();
 }
 
 const sim = simulateWorld(getWorld());
@@ -205,6 +241,7 @@ sim.setScene();
 
 const clock = new THREE.Clock()
 sim.sendTravellers();
+sim.sendEvents();
 
 const controls = new OrbitControls(sim.camera, sim.renderer.domElement);
 

@@ -21,6 +21,10 @@ type Service = {
     * External traffic reaching this service
     */
   inbound: {[key: string]: { rate: number }},
+  /**
+    * Stuff happening on this service
+    */
+  events: {[key: string]: { rate: number }},
 }
 
 export default Service;

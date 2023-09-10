@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import Road from './road';
 import Label from './label';
 import Theme from './theme';
+import { EventType, WorldEvent } from './worldEvent';
 
 class City {
   name: string;
@@ -14,6 +15,7 @@ class City {
   colour: string;
   label: Label;
   roads: Road[];
+  events: WorldEvent[];
   mesh: THREE.Mesh;
 
   constructor(theme:Theme, name: string, x: number, y: number, z: number, height: number, label: Label, diameter:number=0.6) {
@@ -26,6 +28,7 @@ class City {
     this.diameter = diameter;
     this.label = label;
     this.roads = [];
+    this.events = [];
     this.mesh = null;
   }
 
@@ -37,6 +40,12 @@ class City {
     const road = new Road(this, to, rate);
     this.roads.push(road);
     return road;
+  }
+
+  addEvent(type: EventType, rate:number=3) {
+    const event = new WorldEvent(this, type, rate);
+    this.events.push(event);
+    return event;
   }
 
   getMesh(): THREE.Mesh {
@@ -66,7 +75,7 @@ class City {
   getLabel(): THREE.Object3D {
     const mesh = this.getMesh();
     const sprite = this.label.getObject();
-    sprite.position.set(mesh.position.x + 0.85, mesh.position.y, mesh.position.z + 0.85);
+    sprite.position.set(mesh.position.x + 1, mesh.position.y, mesh.position.z + 0.8);
     sprite.rotation.x = - Math.PI / 2;
     sprite.position.y = 0.01;
     sprite.receiveShadow = true;
