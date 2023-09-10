@@ -50,6 +50,9 @@ function getWorld(): World {
     outbound: {
       'apply': {
         rate: 3
+      },
+      'git': {
+        rate: 3
       }
     },
     inbound: {
@@ -68,6 +71,12 @@ function getWorld(): World {
     outbound: {
       'find': {
         rate: 3
+      },
+      'git': {
+        rate: 3
+      },
+      'register': {
+        rate: 3
       }
     },
     inbound: {
@@ -75,8 +84,41 @@ function getWorld(): World {
     }
   };
 
+  const git: Service = {
+    timeframe: 60 * 10,
+    name: 'git',
+    displayName: 'GIT',
+    host: 'getintoteaching.education.gov.uk',
+    theme: 'git',
+    outbound: {
+      'apply': {
+        rate: 3
+      },
+      'find': {
+        rate: 3
+      }
+    },
+    inbound: {
+      'internet': {
+        rate: 5
+      }
+    }
+  };
+
+  const register: Service = {
+    timeframe: 60 * 10,
+    name: 'register',
+    displayName: 'Register',
+    host: 'www.register-trainee-teachers.service.gov.uk',
+    theme: 'govuk',
+    outbound: {
+    },
+    inbound: {
+    }
+  };
+
   const world: World = {
-    services: [find, apply]
+    services: [find, apply, git, register]
   }
 
   return world;
@@ -86,37 +128,49 @@ function simulateWorld(world: World): Simulation {
   const positions:any = {
     'find': {
       'city' : { x: -2, y: 0, z: 0 },
-      'internet': { x: -2, y: 0, z: -2 }
+      'internet': { x: -2, y: 0, z: 3 }
     },
     'apply': {
       'city' : { x: 2, y: 0, z: 0 },
-      'internet': { x: 2, y: 0, z: -2 }
+      'internet': { x: 2, y: 0, z: 3 }
+    },
+    'register': {
+      'city' : { x: 6, y: 0, z: 0 },
+      'internet': { x: 6, y: 0, z: 3 }
     },
     'git': {
-      'city' : { x: 0, y: 0, z: 2 },
-      'internet': { x: 0, y: 0, z: 4 }
+      'city' : { x: 0, y: 0, z: -3 },
+      'internet': { x: 0, y: 0, z: -6 }
     }
   }
 
   const cities:{[key:string]: City} = world.services.reduce<{[key:string]: City}>((acc, s:Service) => {
     const { x: cityX, y: cityY, z: cityZ } = positions[s.name]['city'];
-    const { x: originX, y: originY, z: originZ } = positions[s.name]['internet'];
-
-    const originName = `${s.name}-origin`;
     acc[s.name] = new City(themes[s.theme], s.name, cityX, cityY, cityZ, 0.5, new Label(s.displayName));
-    acc[originName] = new City(themes['internet'], originName, originX, originY, originZ, 0.5, new Label(''));
+
+    if(s.inbound['internet']) {
+      const { x: originX, y: originY, z: originZ } = positions[s.name]['internet'];
+
+      const originName = `${s.name}-internet`;
+      acc[originName] = new City(themes['internet'], originName, originX, originY, originZ, 0.25, new Label(''), 0.3);
+    }
 
     return acc;
   }, {});
 
   const roads: Road[] = world.services.flatMap((s:Service) => {
     const thisCity:City = cities[s.name];
-    const roads = Object.entries(s.outbound).map(([destination, details]) => {
+    const outboundRoads:Road[] = Object.entries(s.outbound).map(([destination, details]) => {
       let toCity = cities[destination];
       return thisCity.addRoad(toCity, details.rate);
     });
 
-    return roads;
+    const inboundRoads:Road[] = Object.entries(s.inbound).map(([_origin, details]) => {
+      const internet = cities[`${s.name}-internet`];
+      return internet.addRoad(thisCity, details.rate);
+    });
+
+    return [...outboundRoads, ...inboundRoads];
   });
 
   return new Simulation(buildGround(), new Map<string, City>(Object.entries(cities)), roads);

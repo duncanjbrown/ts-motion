@@ -34,8 +34,8 @@ class Simulation {
   }
 
   setupLighting() {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1)
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2)
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
     directionalLight.position.set(2, 2, 1);
     directionalLight.castShadow = true;
 

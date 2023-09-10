@@ -26,8 +26,8 @@ class Road {
     return road;
   }
 
-  sendTraveller(): Traveller {
-    const traveller = new Traveller(this.start, this.end, 'red')
+  sendTraveller(colour:string='black'): Traveller {
+    const traveller = new Traveller(this.start, this.end, colour)
     this.travellers.push(traveller);
 
     return traveller;
