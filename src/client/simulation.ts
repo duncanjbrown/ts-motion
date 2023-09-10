@@ -116,19 +116,23 @@ class Simulation {
 
   sendTravellers() {
     this.roads.forEach(road => {
-      this.intervals.push(window.setInterval(() => {
-        const traveller = road.sendTraveller();
-        this.scene.add(traveller.getMesh());
-      }, road.getInterval()));
+      if(road.rate > 0) {
+        this.intervals.push(window.setInterval(() => {
+          const traveller = road.sendTraveller();
+          this.scene.add(traveller.getMesh());
+        }, road.getInterval()));
+      }
     });
   }
 
   sendEvents() {
     this.events.forEach(event => {
-      this.intervals.push(window.setInterval(() => {
-        const signal = event.sendSignal();
-        this.scene.add(signal.getMesh());
-      }, event.getInterval()));
+      if(event.rate > 0) {
+        this.intervals.push(window.setInterval(() => {
+          const signal = event.sendSignal();
+          this.scene.add(signal.getMesh());
+        }, event.getInterval()));
+      }
     });
   }
 

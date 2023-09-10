@@ -2,9 +2,11 @@ import express from 'express';
 import webpack from 'webpack';
 import webpackDevMiddleware from 'webpack-dev-middleware';
 import ws from 'ws';
-import Service from './../common/service';
-import World from './../common/world';
+import WorldUpdate from './../common/worldUpdate';
+import ServiceUpdate from './../common/serviceUpdate';
 import Dotenv from 'dotenv';
+import { BigQuery } from '@google-cloud/bigquery';
+import FS from 'fs';
 
 Dotenv.config();
 
@@ -12,8 +14,6 @@ const app = express();
 const config = require('./../../webpack.config.js');
 const compiler = webpack(config);
 
-// Tell express to use the webpack-dev-middleware and use the webpack.config.js
-// configuration file as a base.
 app.use(
   webpackDevMiddleware(compiler, {
     publicPath: config.output.publicPath,
@@ -24,61 +24,87 @@ app.use(express.static('dist'))
 
 const wss = new ws.WebSocketServer({port: 8181})
 
-function getWorld(): World {
-  const find: Service = {
-    timeframe: 60 * 10,
-    name: 'find',
-    displayName: 'Find',
-    host: 'www.find-postgraduate-teacher-training.service.gov.uk',
-    theme: 'govuk',
-    outbound: {
-      'apply': {
-        'rate': Math.floor(Math.random() * 2) + 1
-      }
-    },
-    events: {},
-    inbound: {
-      'internet': {
-        'rate': Math.floor(Math.random() * 2) + 1
-      }
-    }
-  };
-
-  const apply: Service = {
-    timeframe: 60 * 10,
-    name: 'apply',
-    displayName: 'Apply',
-    host: 'www.apply-for-teacher-training.service.gov.uk',
-    theme: 'govuk',
-    outbound: {
-      'find': {
-        'rate': Math.floor(Math.random() * 2) + 1
-      }
-    },
-    events: {
-      'submission': {
-        rate: 6
-      }
-    },
-    inbound: {
-      'internet': {
-        'rate': Math.floor(Math.random() * 2) + 1
-      }
-    }
-  };
-
-  const world:World = {
-    services: [find, apply]
-  };
-
-  return world;
+type Row = {
+    count: number,
+    event_type: string,
+    origin: string | null,
+    destination: string | null,
+    rate: number
 }
 
+function newService(serviceName: string):ServiceUpdate {
+    return {
+        name: serviceName,
+        outbound: {},
+        inbound: {},
+        events: {},
+    };
+}
+
+function loadMetrics(sql: string): Promise<Row[]> {
+  const bigquery = new BigQuery();
+
+  async function query() {
+    const options = {
+      query: sql,
+    };
+
+    const [job] = await bigquery.createQueryJob(options);
+    const [rows] = await job.getQueryResults();
+
+    return rows;
+  }
+
+  return query();
+}
+
+async function getWorldUpdate(metricsSql:string): Promise<WorldUpdate> {
+  const rows: Row[] = await loadMetrics(metricsSql);
+  const servicesMap: { [key: string]: ServiceUpdate } = {};
+
+  rows.forEach(row => {
+    if (row.event_type === 'referral') {
+      const destService = row.destination!;
+
+      if (!servicesMap[destService]) {
+        servicesMap[destService] = newService(destService);
+      }
+
+      if (row.origin === null) {
+        servicesMap[destService].inbound['internet'] = { rate: row.rate };
+      } else {
+        if (!servicesMap[row.origin]) {
+          servicesMap[row.origin] = newService(row.origin);
+        }
+        servicesMap[row.origin].outbound[destService] = { rate: row.rate };
+      }
+    } else {
+      const originService = row.origin!;
+      if (!servicesMap[originService]) {
+        servicesMap[originService] = newService(originService);
+      }
+      servicesMap[originService].events[row.event_type] = { rate: row.rate };
+    }
+  });
+
+  const worldUpdate:WorldUpdate = { services: Object.values(servicesMap) };
+  return worldUpdate;
+}
+
+const metricsSql = FS.readFileSync('./src/sql/metrics.sql').toString();
+
 wss.on('connection', function connection(sock) {
+  console.log('Connected!');
+  getWorldUpdate(metricsSql).then(update => {
+    sock.send(JSON.stringify(update));
+  });
+
   setInterval(() => {
-    sock.send(JSON.stringify(getWorld()));
-  }, 5000);
+    console.log('Sending update...');
+    getWorldUpdate(metricsSql).then(update => {
+      sock.send(JSON.stringify(update));
+    });
+  }, 60 * 1000);
 });
 
-// Serve the files on port 3000.
 app.listen(3000, function () {});

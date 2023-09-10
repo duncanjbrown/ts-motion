@@ -4,9 +4,14 @@ import { Simulation } from './simulation'
 import { City, Theme } from './city';
 import Road from './road';
 import Label from './label';
-import World from './../common/world';
-import Service from './../common/service';
+import WorldUpdate from './../common/worldUpdate';
+import ServiceUpdate from './../common/serviceUpdate';
+import Service from './service';
 import { EventType, WorldEvent } from './worldEvent';
+
+type World = {
+  services: Service[]
+}
 
 function buildGround(): THREE.Mesh {
   const planeGeometry = new THREE.PlaneGeometry(100, 100);
@@ -43,88 +48,88 @@ const themes:Record<string, Theme> = {
 
 function getWorld(): World {
   const find: Service = {
-    timeframe: 60 * 10,
+    timeframe: 60 * 20,
     name: 'find',
     displayName: 'Find',
     host: 'www.find-postgraduate-teacher-training.service.gov.uk',
     theme: 'govuk',
     outbound: {
       'apply': {
-        rate: 3
+        rate: 0
       },
       'git': {
-        rate: 3
+        rate: 0
       }
     },
     events: {},
     inbound: {
       'internet': {
-        rate: 5
+        rate: 0
       }
     }
   };
 
   const apply: Service = {
-    timeframe: 60 * 10,
+    timeframe: 60 * 20,
     name: 'apply',
     displayName: 'Apply',
     host: 'www.apply-for-teacher-training.service.gov.uk',
     theme: 'govuk',
     events: {
       'submission': {
-        rate: 3
+        rate: 0
       },
       'recruitment': {
-        rate: 1
+        rate: 0
       }
     },
     outbound: {
       'find': {
-        rate: 3
+        rate: 0
       },
       'git': {
-        rate: 3
+        rate: 0
       }
     },
     inbound: {
-      'internet': { rate: 5 }
+      'internet': { rate: 0 }
     }
   };
 
   const git: Service = {
-    timeframe: 60 * 10,
+    timeframe: 60 * 20,
     name: 'git',
     displayName: 'GIT',
     host: 'getintoteaching.education.gov.uk',
     theme: 'git',
     outbound: {
       'apply': {
-        rate: 3
+        rate: 0
       },
       'find': {
-        rate: 3
+        rate: 0
       }
     },
     inbound: {
       'internet': {
-        rate: 5
+        rate: 0
       }
     },
     events: {}
   };
 
   const register: Service = {
-    timeframe: 60 * 10,
+    timeframe: 60 * 20,
     name: 'register',
     displayName: 'Register',
     host: 'www.register-trainee-teachers.service.gov.uk',
     theme: 'govuk',
     events: {
       'qts': {
-        rate: 3
+        rate: 0
       },
       'withdrawal': {
-        rate: 3
+        rate: 0
       }
     },
     outbound: {
@@ -207,20 +212,33 @@ function simulateWorld(world: World): Simulation {
   return new Simulation(buildGround(), new Map<string, City>(Object.entries(cities)), roads, events);
 }
 
-function updateSimulation(simulation:Simulation, worldUpdate: World) {
+function updateSimulation(simulation:Simulation, worldUpdate: WorldUpdate) {
+  console.log('Update!', worldUpdate);
   worldUpdate.services.forEach(serviceUpdate => {
-    let fromCity = simulation.cities.get(serviceUpdate.name);
+    let thisCity = simulation.cities.get(serviceUpdate.name);
 
     Object.entries(serviceUpdate.outbound).forEach(([destination, details]) => {
       let toCity = simulation.cities.get(destination);
-      let road = simulation.roads.find(r => r.start == fromCity && r.end == toCity);
+      let road = simulation.roads.find(r => r.start == thisCity && r.end == toCity);
       if (road) {
+        console.log('updating outbound rate');
         road.rate = details.rate;
       }
     });
 
+    Object.entries(serviceUpdate.inbound).forEach(([origin, details]) => {
+      if(origin === 'internet') {
+        const internet = simulation.cities.get(`${serviceUpdate.name}-internet`);
+        let road = simulation.roads.find(r => r.start == internet && r.end == thisCity);
+        if (road) {
+          console.log('updating inbound rate');
+          road.rate = details.rate;
+        }
+      }
+    });
+
     Object.entries(serviceUpdate.events).forEach(([eventType, details]) => {
-      let event = simulation.events.find(e => e.start == fromCity && e.type == eventType);
+      let event = simulation.events.find(e => e.start == thisCity && e.type == eventType);
       if (event) {
         event.rate = details.rate;
       }
@@ -245,7 +263,7 @@ const controls = new OrbitControls(sim.camera, sim.renderer.domElement);
 const socket = new WebSocket('ws://localhost:8181');
 
 socket.onmessage = (event: MessageEvent) => {
-  const newWorld:World = JSON.parse(event.data);
+  const newWorld:WorldUpdate = JSON.parse(event.data);
   updateSimulation(sim, newWorld);
 };
 
