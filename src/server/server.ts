@@ -72,10 +72,6 @@ function getWorld(): World {
 }
 
 wss.on('connection', function connection(sock) {
-  sock.on('message', function message(data) {
-    console.log('received: %s', data)
-  })
-
   setInterval(() => {
     sock.send(JSON.stringify(getWorld()));
   }, 5000);

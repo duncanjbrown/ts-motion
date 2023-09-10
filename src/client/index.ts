@@ -209,14 +209,12 @@ function simulateWorld(world: World): Simulation {
 
 function updateSimulation(simulation:Simulation, worldUpdate: World) {
   worldUpdate.services.forEach(serviceUpdate => {
-    console.log('new service');
     let fromCity = simulation.cities.get(serviceUpdate.name);
 
     Object.entries(serviceUpdate.outbound).forEach(([destination, details]) => {
       let toCity = simulation.cities.get(destination);
       let road = simulation.roads.find(r => r.start == fromCity && r.end == toCity);
       if (road) {
-        console.log("new rate " + details.rate);
         road.rate = details.rate;
       }
     });
@@ -224,7 +222,6 @@ function updateSimulation(simulation:Simulation, worldUpdate: World) {
     Object.entries(serviceUpdate.events).forEach(([eventType, details]) => {
       let event = simulation.events.find(e => e.start == fromCity && e.type == eventType);
       if (event) {
-        console.log("new event rate " + details.rate);
         event.rate = details.rate;
       }
     });
@@ -246,13 +243,9 @@ sim.sendEvents();
 const controls = new OrbitControls(sim.camera, sim.renderer.domElement);
 
 const socket = new WebSocket('ws://localhost:8181');
-socket.onopen = () => {
-  socket.send("hello");
-};
 
 socket.onmessage = (event: MessageEvent) => {
   const newWorld:World = JSON.parse(event.data);
-  console.log(newWorld);
   updateSimulation(sim, newWorld);
 };
 
