@@ -12,21 +12,15 @@ type Service = {
     */
   displayName: string,
   host: string,
-  uniques: number,
+  theme: string,
   /**
     * Referrals leaving this service
     */
-  outbound: [{
-    destination: string,
-    rate: number,
-  }?],
-  colour: string,
+  outbound: {[key: string]: { rate: number }},
   /**
     * External traffic reaching this service
     */
-  inbound: {
-    rate: number
-  }
+  inbound: {[key: string]: { rate: number }},
 }
 
 export default Service;

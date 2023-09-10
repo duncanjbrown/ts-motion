@@ -27,14 +27,16 @@ function getWorld(): World {
     name: 'find',
     displayName: 'Find',
     host: 'www.find-postgraduate-teacher-training.service.gov.uk',
-    uniques: 100,
-    colour: 'red',
-    outbound: [{
-      destination: 'apply',
-      rate: Math.floor(Math.random() * 2) + 1
-    }],
+    theme: 'govuk',
+    outbound: {
+      'apply': {
+        'rate': Math.floor(Math.random() * 2) + 1
+      }
+    },
     inbound: {
-      rate: Math.floor(Math.random() * 2) + 1
+      'internet': {
+        'rate': Math.floor(Math.random() * 2) + 1
+      }
     }
   };
 
@@ -43,14 +45,16 @@ function getWorld(): World {
     name: 'apply',
     displayName: 'Apply',
     host: 'www.apply-for-teacher-training.service.gov.uk',
-    uniques: 100,
-    colour: 'red',
-    outbound: [{
-      destination: 'find',
-      rate: Math.floor(Math.random() * 2) + 1
-    }],
+    theme: 'govuk',
+    outbound: {
+      'find': {
+        'rate': Math.floor(Math.random() * 2) + 1
+      }
+    },
     inbound: {
-      rate: Math.floor(Math.random() * 2)
+      'internet': {
+        'rate': Math.floor(Math.random() * 2) + 1
+      }
     }
   };
 

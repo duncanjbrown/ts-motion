@@ -7,7 +7,7 @@ class Simulation {
   camera: THREE.OrthographicCamera;
   renderer: THREE.Renderer;
   ground: THREE.Mesh;
-  cities: City[];
+  cities: Map<string, City>;
   roads: Road[];
   intervals: number[];
 
@@ -49,7 +49,7 @@ class Simulation {
 
   constructor(
     ground: THREE.Mesh,
-    cities: City[],
+    cities: Map<string, City>,
     roads: Road[],
   ) {
     this.scene = new THREE.Scene();
@@ -99,7 +99,7 @@ class Simulation {
 
   setScene() {
     this.scene.add(this.ground);
-    this.cities.forEach(city => {
+    [...this.cities.values()].forEach((city:City) => {
       city.getComponents().forEach(component => {
         this.scene.add(component)
       });

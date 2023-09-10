@@ -6,14 +6,12 @@ class Road {
   start: City;
   end: City;
   rate: number; // travellers per second
-  travellerColour: string;
   travellers: Traveller[];
 
-  constructor(start: City, end: City, rate:number=3, travellerColour: string) {
+  constructor(start: City, end: City, rate:number=3) {
     this.start = start;
     this.end = end;
     this.rate = rate;
-    this.travellerColour = travellerColour;
     this.travellers = [];
   }
 
@@ -29,7 +27,7 @@ class Road {
   }
 
   sendTraveller(): Traveller {
-    const traveller = new Traveller(this.start, this.end, this.travellerColour)
+    const traveller = new Traveller(this.start, this.end, 'red')
     this.travellers.push(traveller);
 
     return traveller;

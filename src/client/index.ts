@@ -19,20 +19,43 @@ function buildGround(): THREE.Mesh {
   return plane;
 }
 
+const govukTheme:Theme = {
+  colour: '#000',
+  texture: 'govuk-crown.png',
+}
+
+const gitTheme:Theme = {
+  colour: '#159964',
+  texture: 'git.jpg',
+}
+
+const internetTheme:Theme = {
+  colour: '#5694ca',
+  texture: 'cloud.png',
+}
+
+const themes:Record<string, Theme> = {
+  'govuk': govukTheme,
+  'git': gitTheme,
+  'internet': internetTheme
+};
+
 function getWorld(): World {
   const find: Service = {
     timeframe: 60 * 10,
     name: 'find',
     displayName: 'Find',
     host: 'www.find-postgraduate-teacher-training.service.gov.uk',
-    uniques: 100,
-    colour: 'red',
-    outbound: [{
-      destination: 'apply',
-      rate: 3
-    }],
+    theme: 'govuk',
+    outbound: {
+      'apply': {
+        rate: 3
+      }
+    },
     inbound: {
-      rate: 5
+      'internet': {
+        rate: 5
+      }
     }
   };
 
@@ -41,14 +64,14 @@ function getWorld(): World {
     name: 'apply',
     displayName: 'Apply',
     host: 'www.apply-for-teacher-training.service.gov.uk',
-    uniques: 100,
-    colour: 'red',
-    outbound: [{
-      destination: 'find',
-      rate: 3
-    }],
+    theme: 'govuk',
+    outbound: {
+      'find': {
+        rate: 3
+      }
+    },
     inbound: {
-      rate: 5
+      'internet': { rate: 5 }
     }
   };
 
@@ -60,51 +83,60 @@ function getWorld(): World {
 }
 
 function simulateWorld(world: World): Simulation {
-  const positions = [
-    { x: -2, y: 0, z: 0 },
-    { x: 2, y: 0, z: 0 }
-  ];
+  const positions:any = {
+    'find': {
+      'city' : { x: -2, y: 0, z: 0 },
+      'internet': { x: -2, y: 0, z: -2 }
+    },
+    'apply': {
+      'city' : { x: 2, y: 0, z: 0 },
+      'internet': { x: 2, y: 0, z: -2 }
+    },
+    'git': {
+      'city' : { x: 0, y: 0, z: 2 },
+      'internet': { x: 0, y: 0, z: 4 }
+    }
+  }
 
-  const cities = world.services.map((s, i) => {
-    const { x, y, z } = positions[i];
-    return new City(s.name, x, y, z, 0.5, new Label(s.displayName), '#000', s.colour);
-  });
+  const cities:{[key:string]: City} = world.services.reduce<{[key:string]: City}>((acc, s:Service) => {
+    const { x: cityX, y: cityY, z: cityZ } = positions[s.name]['city'];
+    const { x: originX, y: originY, z: originZ } = positions[s.name]['internet'];
 
-  const origin = new City('external', 0, 0, 6, 0.5, new Label("The Internet"), "#e1e1e1", '#fff');
+    const originName = `${s.name}-origin`;
+    acc[s.name] = new City(themes[s.theme], s.name, cityX, cityY, cityZ, 0.5, new Label(s.displayName));
+    acc[originName] = new City(themes['internet'], originName, originX, originY, originZ, 0.5, new Label(''));
+
+    return acc;
+  }, {});
 
   const roads: Road[] = world.services.flatMap((s:Service) => {
-    const thisCity = cities.find(c => c.name == s.name);
-    const roads = s.outbound.map(outbound => {
-      let toCity = cities.find(c => c.name == outbound.destination);
-      return thisCity.addRoad(toCity, outbound.rate);
+    const thisCity:City = cities[s.name];
+    const roads = Object.entries(s.outbound).map(([destination, details]) => {
+      let toCity = cities[destination];
+      return thisCity.addRoad(toCity, details.rate);
     });
-
-    roads.push(origin.addRoad(thisCity, s.inbound.rate));
 
     return roads;
   });
 
-  cities.push(origin);
-
-  return new Simulation(buildGround(), cities, roads);
+  return new Simulation(buildGround(), new Map<string, City>(Object.entries(cities)), roads);
 }
 
 function updateSimulation(simulation:Simulation, worldUpdate: World) {
   worldUpdate.services.forEach(serviceUpdate => {
     console.log('new service');
-    let city = simulation.cities.find(c => c.name == serviceUpdate.name);
-    if (city) {
-      city.name = serviceUpdate.name;
-      city.colour = serviceUpdate.colour;
-    }
+    let fromCity = simulation.cities.get(serviceUpdate.name);
 
-    serviceUpdate.outbound.forEach(outbound => {
-      let fromCity = simulation.cities.find(c => c.name == serviceUpdate.name);
-      let toCity = simulation.cities.find(c => c.name == outbound.destination);
+    // const roads = Object.entries(s.outbound).map(([destination, details]) => {
+    //   let toCity = cities[destination];
+    //   return thisCity.addRoad(toCity, details.rate);
+    // });
+    Object.entries(serviceUpdate.outbound).forEach(([destination, details]) => {
+      let toCity = simulation.cities.get(destination);
       let road = simulation.roads.find(r => r.start == fromCity && r.end == toCity);
       if (road) {
-        console.log("new rate " + outbound.rate);
-        road.rate = outbound.rate;
+        console.log("new rate " + details.rate);
+        road.rate = details.rate;
       }
     });
   });
