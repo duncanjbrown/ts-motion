@@ -11,7 +11,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/bigquery": "^7.2.0",
     "deep-object-diff": "^1.1.9",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "three": "^0.156.0",
     "ts-loader": "^9.4.4",

@@ -4,6 +4,9 @@ import webpackDevMiddleware from 'webpack-dev-middleware';
 import ws from 'ws';
 import Service from './../common/service';
 import World from './../common/world';
+import Dotenv from 'dotenv';
+
+Dotenv.config();
 
 const app = express();
 const config = require('./../../webpack.config.js');
