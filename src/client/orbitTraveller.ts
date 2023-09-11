@@ -12,7 +12,7 @@ class OrbitTraveller {
   startPos: THREE.Vector3;
   endPos: THREE.Vector3;
 
-  constructor(centre: THREE.Vector3, radius:number, colour:string='blue', size:number=0.03) {
+  constructor(centre: THREE.Vector3, radius:number, colour:string='blue', size:number=0.05) {
     this.centre = centre;
     this.speed = Math.floor(Math.random() * 3) + 2;
     this.colour = colour

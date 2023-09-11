@@ -12,7 +12,7 @@ class Traveller {
   startPos: THREE.Vector3;
   endPos: THREE.Vector3;
 
-  constructor(start: THREE.Vector3, end: THREE.Vector3, colour: string, size:number=0.03) {
+  constructor(start: THREE.Vector3, end: THREE.Vector3, colour: string, size:number=0.05) {
     this.start = start;
     this.end = end;
     this.speed = Math.floor(Math.random() * 3) + 2;

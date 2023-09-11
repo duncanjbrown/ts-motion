@@ -122,29 +122,8 @@ function getWorld(): World {
     orbit: { rate: 0 }
   };
 
-  const register: Service = {
-    timeframe: 60 * 20,
-    name: 'register',
-    displayName: 'Register',
-    host: 'www.register-trainee-teachers.service.gov.uk',
-    theme: 'govuk',
-    events: {
-      'qts': {
-        rate: 0
-      },
-      'withdrawal': {
-        rate: 0
-      }
-    },
-    outbound: {
-    },
-    inbound: {
-    },
-    orbit: { rate: 0 }
-  };
-
   const world: World = {
-    services: [find, apply, git, register]
+    services: [find, apply, git]
   }
 
   return world;
@@ -153,20 +132,16 @@ function getWorld(): World {
 function simulateWorld(world: World): Simulation {
   const positions:any = {
     'find': {
-      'city' : { x: -5, y: 0, z: 0 },
-      'internet': { x: -5, y: 0, z: 3 }
+      'city' : { x: -3, y: 0, z: 1 },
+      'internet': { x: -3, y: 0, z: 4 }
     },
     'apply': {
-      'city' : { x: 1, y: 0, z: 0 },
-      'internet': { x: 1, y: 0, z: 3 }
-    },
-    'register': {
-      'city' : { x: 5, y: 0, z: 0 },
-      'internet': { x: 5, y: 0, z: 4 }
+      'city' : { x: 3, y: 0, z: 1 },
+      'internet': { x: 3, y: 0, z: 4 }
     },
     'git': {
-      'city' : { x: -2, y: 0, z: -4 },
-      'internet': { x: -2, y: 0, z: -7 }
+      'city' : { x: 0, y: 0, z: -3 },
+      'internet': { x: 0, y: 0, z: -6 }
     }
   }
 

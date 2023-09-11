@@ -1,4 +1,4 @@
-DECLARE time_interval INT64 DEFAULT 1; -- set the number of minutes to consider
+DECLARE time_interval INT64 DEFAULT 1;
 
 WITH
   domains AS (
@@ -15,6 +15,23 @@ WITH
     'www.find-postgraduate-teacher-training.service.gov.uk'
   ),
   reqs AS (
+  SELECT
+    COUNT(*) as rate,
+    domains.slug as origin,
+    CASE
+      when request_referer IS NOT NULL AND NET.HOST(request_referer) IN (SELECT host from domains where slug != 'git') THEN 'referral'
+      when request_referer IS NOT NULL AND NET.HOST(request_referer) IN (SELECT host from domains where slug = 'git') THEN 'session'
+      when request_referer IS NULL OR NET.HOST(request_referer) NOT IN (SELECT host from domains) THEN 'internet'
+    END AS world_event_type,
+    'git' AS destination
+  FROM `get-into-teaching.git_website_events_production.events`
+  LEFT JOIN domains ON domains.host = NET.HOST(request_referer)
+  WHERE
+    occurred_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL time_interval + 1 MINUTE)
+    AND occurred_at <= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL time_interval MINUTE)
+    AND event_type = "web_request"
+    GROUP BY origin, world_event_type
+UNION ALL
   SELECT
     COUNT(*) as rate,
     domains.slug as origin,
@@ -83,3 +100,4 @@ FROM
   events
 GROUP BY
 origin, world_event_type
+
