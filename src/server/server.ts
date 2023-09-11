@@ -87,6 +87,10 @@ async function getWorldUpdate(metricsSql:string): Promise<WorldUpdate> {
     }
   });
 
+  // servicesMap['apply']['events']['submission'] = {rate: 3};
+  // servicesMap['apply']['events']['recruitment'] = {rate: 3};
+  // servicesMap['register']['events']['qts'] = {rate: 3};
+
   const worldUpdate:WorldUpdate = { services: Object.values(servicesMap) };
   return worldUpdate;
 }

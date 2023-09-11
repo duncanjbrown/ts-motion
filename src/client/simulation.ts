@@ -118,9 +118,11 @@ class Simulation {
     this.roads.forEach(road => {
       if(road.rate > 0) {
         this.intervals.push(window.setInterval(() => {
-          const traveller = road.sendTraveller();
-          this.scene.add(traveller.getMesh());
-        }, road.getInterval()));
+          if (Math.random() < road.rate/60) {
+            const traveller = road.sendTraveller();
+            this.scene.add(traveller.getMesh());
+          }
+        }, 1000));
       }
     });
   }
@@ -129,9 +131,11 @@ class Simulation {
     this.events.forEach(event => {
       if(event.rate > 0) {
         this.intervals.push(window.setInterval(() => {
-          const signal = event.sendSignal();
-          this.scene.add(signal.getMesh());
-        }, event.getInterval()));
+          if (Math.random() < event.rate/60) {
+            const signal = event.sendSignal();
+            this.scene.add(signal.getMesh());
+          }
+        }, 1000));
       }
     });
   }
