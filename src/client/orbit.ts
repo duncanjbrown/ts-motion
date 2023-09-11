@@ -26,10 +26,17 @@ class Orbit {
   }
 
   sendTraveller(colour:string='black'): OrbitTraveller {
-    const traveller = new OrbitTraveller(this.centre, 0.7, colour)
-    this.travellers.push(traveller);
+    let reusableTraveller:OrbitTraveller;
+    if(reusableTraveller = this.travellers.find(t => !t.finished && !t.persist)) {
+      reusableTraveller.persist = true;
 
-    return traveller;
+      return reusableTraveller;
+    } else {
+      const traveller = new OrbitTraveller(this.centre, 0.7, colour)
+      this.travellers.push(traveller);
+
+      return traveller;
+    }
   }
 
   removeAndReturnFinishedTravellers() {

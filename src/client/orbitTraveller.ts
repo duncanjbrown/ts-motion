@@ -8,6 +8,7 @@ class OrbitTraveller {
   size: number;
   mesh: THREE.Mesh;
   finished: boolean;
+  persist: boolean; // keep alive to reuse
   accumulatedAngle: number;
   startPos: THREE.Vector3;
   endPos: THREE.Vector3;
@@ -20,6 +21,7 @@ class OrbitTraveller {
     this.size = size;
     this.accumulatedAngle = 0;
     this.radius = radius;
+    this.persist = false;
 
     this.startPos = this.centre.clone();
 
@@ -31,8 +33,14 @@ class OrbitTraveller {
     this.accumulatedAngle += angleChange;
 
     if (this.accumulatedAngle >= 2 * Math.PI) {
+      if(this.persist) {
+        this.accumulatedAngle = 0;
+        this.mesh.position.x = this.centre.x + this.radius * Math.cos(this.accumulatedAngle);
+        this.mesh.position.z = this.centre.z + this.radius * Math.sin(this.accumulatedAngle);
+        this.persist = false;
+      } else {
         this.finished = true;
-        return;
+      }
     } else {
       this.mesh.position.x = this.centre.x + this.radius * Math.cos(this.accumulatedAngle);
       this.mesh.position.z = this.centre.z + this.radius * Math.sin(this.accumulatedAngle);

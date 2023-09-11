@@ -140,7 +140,9 @@ class Simulation {
         this.intervals.push(window.setInterval(() => {
           if (Math.random() < (city.orbit.rate / 4)/60) {
             const orbitTraveller = city.orbit.sendTraveller();
-            this.scene.add(orbitTraveller.getMesh());
+            if(!orbitTraveller.mesh) { // not yet rendered, could be reusableTraveller
+              this.scene.add(orbitTraveller.getMesh());
+            }
           }
         }, 1000 / 4));
       }
