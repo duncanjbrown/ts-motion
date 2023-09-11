@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import Road from './road';
+import Orbit from './orbit';
 import Label from './label';
 import Theme from './theme';
 import { EventType, WorldEvent } from './worldEvent';
@@ -15,6 +16,7 @@ class City {
   colour: string;
   label: Label;
   roads: Road[];
+  orbit: Orbit;
   events: WorldEvent[];
   mesh: THREE.Mesh;
 
@@ -40,6 +42,12 @@ class City {
     const road = new Road(this, to, rate);
     this.roads.push(road);
     return road;
+  }
+
+  addOrbit(rate:number) {
+    const orbit = new Orbit(this, rate);
+    this.orbit = orbit;
+    return orbit;
   }
 
   addEvent(type: EventType, rate:number=3) {

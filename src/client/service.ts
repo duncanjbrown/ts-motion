@@ -25,6 +25,7 @@ type Service = {
     * Stuff happening on this service
     */
   events: {[key: string]: { rate: number }},
+  orbit: { rate: number },
 }
 
 export default Service;

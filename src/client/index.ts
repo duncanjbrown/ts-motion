@@ -4,6 +4,7 @@ import { Simulation } from './simulation'
 import { City, Theme } from './city';
 import Road from './road';
 import Label from './label';
+import Orbit from './orbit';
 import WorldUpdate from './../common/worldUpdate';
 import ServiceUpdate from './../common/serviceUpdate';
 import Service from './service';
@@ -66,7 +67,8 @@ function getWorld(): World {
       'internet': {
         rate: 0
       }
-    }
+    },
+    orbit: { rate: 0 }
   };
 
   const apply: Service = {
@@ -93,7 +95,8 @@ function getWorld(): World {
     },
     inbound: {
       'internet': { rate: 0 }
-    }
+    },
+    orbit: { rate: 10 }
   };
 
   const git: Service = {
@@ -115,7 +118,8 @@ function getWorld(): World {
         rate: 0
       }
     },
-    events: {}
+    events: {},
+    orbit: { rate: 0 }
   };
 
   const register: Service = {
@@ -135,7 +139,8 @@ function getWorld(): World {
     outbound: {
     },
     inbound: {
-    }
+    },
+    orbit: { rate: 0 }
   };
 
   const world: World = {
@@ -194,6 +199,11 @@ function simulateWorld(world: World): Simulation {
     return [...outboundRoads, ...inboundRoads];
   });
 
+  const orbits: Orbit[] = world.services.flatMap((s:Service) => {
+    const thisCity:City = cities[s.name];
+    return thisCity.addOrbit(s.orbit.rate);
+  });
+
   const events: WorldEvent[] = world.services.flatMap((s:Service) => {
     const thisCity:City = cities[s.name];
 
@@ -209,12 +219,12 @@ function simulateWorld(world: World): Simulation {
     return events;
   });
 
-  return new Simulation(buildGround(), new Map<string, City>(Object.entries(cities)), roads, events);
+  return new Simulation(buildGround(), new Map<string, City>(Object.entries(cities)), roads, events, orbits);
 }
 
 function updateSimulation(simulation:Simulation, worldUpdate: WorldUpdate) {
   console.log('Update!', worldUpdate);
-  worldUpdate.services.forEach(serviceUpdate => {
+  worldUpdate.services.forEach((serviceUpdate:ServiceUpdate) => {
     let thisCity = simulation.cities.get(serviceUpdate.name);
 
     Object.entries(serviceUpdate.outbound).forEach(([destination, details]) => {
@@ -243,10 +253,13 @@ function updateSimulation(simulation:Simulation, worldUpdate: WorldUpdate) {
         event.rate = details.rate;
       }
     });
+
+    thisCity.orbit.rate = serviceUpdate.orbit.rate;
   });
 
   simulation.clearIntervals();
   simulation.sendTravellers();
+  simulation.sendOrbits();
   simulation.sendEvents();
 }
 
@@ -256,6 +269,7 @@ sim.setScene();
 
 const clock = new THREE.Clock()
 sim.sendTravellers();
+sim.sendOrbits();
 sim.sendEvents();
 
 const controls = new OrbitControls(sim.camera, sim.renderer.domElement);

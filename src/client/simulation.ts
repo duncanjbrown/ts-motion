@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { City } from './city';
 import Road from './road';
+import Orbit from './orbit';
 import { EventType, WorldEvent } from './worldEvent';
 import Signal from './signal';
 
@@ -12,6 +13,7 @@ class Simulation {
   cities: Map<string, City>;
   roads: Road[];
   events: WorldEvent[];
+  orbits: Orbit[];
   intervals: number[];
 
   getCamera(width: number, height: number) {
@@ -55,6 +57,7 @@ class Simulation {
     cities: Map<string, City>,
     roads: Road[],
     events: WorldEvent[],
+    orbits: Orbit[],
   ) {
     this.scene = new THREE.Scene();
     this.intervals = [];
@@ -80,6 +83,7 @@ class Simulation {
     this.cities = cities;
     this.roads = roads;
     this.events = events;
+    this.orbits = orbits;
 
     // Resize :/
     const self = this;
@@ -112,17 +116,33 @@ class Simulation {
     this.roads.forEach(road => {
       this.scene.add(road.getLine())
     });
+    this.orbits.forEach(orbit => {
+      this.scene.add(orbit.getLine())
+    });
   }
 
   sendTravellers() {
     this.roads.forEach(road => {
       if(road.rate > 0) {
         this.intervals.push(window.setInterval(() => {
-          if (Math.random() < road.rate/60) {
+          if (Math.random() < (road.rate / 4)/60) {
             const traveller = road.sendTraveller();
             this.scene.add(traveller.getMesh());
           }
-        }, 1000));
+        }, 1000 / 4));
+      }
+    });
+  }
+
+  sendOrbits() {
+    this.cities.forEach(city => {
+      if(city.orbit && city.orbit.rate > 0) {
+        this.intervals.push(window.setInterval(() => {
+          if (Math.random() < (city.orbit.rate / 4)/60) {
+            const orbitTraveller = city.orbit.sendTraveller();
+            this.scene.add(orbitTraveller.getMesh());
+          }
+        }, 1000 / 4));
       }
     });
   }
@@ -131,11 +151,11 @@ class Simulation {
     this.events.forEach(event => {
       if(event.rate > 0) {
         this.intervals.push(window.setInterval(() => {
-          if (Math.random() < event.rate/60) {
+          if (Math.random() < (event.rate / 4)/60) {
             const signal = event.sendSignal();
             this.scene.add(signal.getMesh());
           }
-        }, 1000));
+        }, 1000 / 4));
       }
     });
   }
@@ -146,6 +166,14 @@ class Simulation {
       road.travellers.forEach(traveller => {
         traveller.step(delta);
         const removed = road.removeAndReturnFinishedTravellers();
+        removed.forEach(t => { this.scene.remove(t) });
+      });
+    });
+
+    this.orbits.forEach(orbit => {
+      orbit.travellers.forEach(traveller => {
+        traveller.step(delta);
+        const removed = orbit.removeAndReturnFinishedTravellers();
         removed.forEach(t => { this.scene.remove(t) });
       });
     });

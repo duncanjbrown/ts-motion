@@ -25,7 +25,6 @@ app.use(express.static('dist'))
 const wss = new ws.WebSocketServer({port: 8181})
 
 type Row = {
-    count: number,
     event_type: string,
     origin: string | null,
     destination: string | null,
@@ -38,6 +37,7 @@ function newService(serviceName: string):ServiceUpdate {
         outbound: {},
         inbound: {},
         events: {},
+        orbit: { rate: 0 }
     };
 }
 
@@ -65,19 +65,21 @@ async function getWorldUpdate(metricsSql:string): Promise<WorldUpdate> {
   rows.forEach(row => {
     if (row.event_type === 'referral') {
       const destService = row.destination!;
-
       if (!servicesMap[destService]) {
         servicesMap[destService] = newService(destService);
       }
-
-      if (row.origin === null) {
-        servicesMap[destService].inbound['internet'] = { rate: row.rate };
-      } else {
-        if (!servicesMap[row.origin]) {
-          servicesMap[row.origin] = newService(row.origin);
-        }
-        servicesMap[row.origin].outbound[destService] = { rate: row.rate };
+    } else if (row.event_type === 'internet') {
+      const destService = row.destination!;
+      if (!servicesMap[destService]) {
+        servicesMap[destService] = newService(destService);
       }
+      servicesMap[destService].inbound['internet'] = { rate: row.rate };
+    } else if (row.event_type === 'session') {
+      const destService = row.destination!;
+      if (!servicesMap[destService]) {
+        servicesMap[destService] = newService(destService);
+      }
+      servicesMap[destService].orbit = { rate: row.rate };
     } else {
       const originService = row.origin!;
       if (!servicesMap[originService]) {
@@ -86,10 +88,6 @@ async function getWorldUpdate(metricsSql:string): Promise<WorldUpdate> {
       servicesMap[originService].events[row.event_type] = { rate: row.rate };
     }
   });
-
-  // servicesMap['apply']['events']['submission'] = {rate: 3};
-  // servicesMap['apply']['events']['recruitment'] = {rate: 3};
-  // servicesMap['register']['events']['qts'] = {rate: 3};
 
   const worldUpdate:WorldUpdate = { services: Object.values(servicesMap) };
   return worldUpdate;
